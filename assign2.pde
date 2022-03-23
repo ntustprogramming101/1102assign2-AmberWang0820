@@ -20,12 +20,22 @@ int robotX, robotY;//robot's position
 int laserX1, laserX2, laserY;//laser's position, laserX1=laserX2
 float laserLenght;
 int laserSpeed;
-int groundhogX;//groundhog's position
-int groundhogY;
+float groundhogX;//groundhog's position
+float groundhogY;
 int groundhogSize;
 int cabbageX;//cabbage's position
 int cabbageY;
 int cabbageSize;
+
+int hogState;//groundhog change position
+boolean downPressed = false;
+boolean leftPressed = false;
+boolean rightPressed = false;
+final int HOG_IDLE=1;
+final int HOG_DOWN=2;
+final int HOG_LEFT=3;
+final int HOG_RIGHT=4;
+float t;
 
 void setup() {
   size(640, 480, P2D);
@@ -33,12 +43,12 @@ void setup() {
 
   //load the pictures
   skyImg = loadImage("img/bg.jpg");
-  groundhogImg = loadImage("img/groundhog.png");
   lifeImg = loadImage("img/life.png");
   soilImg = loadImage("img/soil.png");
   soldierImg = loadImage("img/soldier.png");
   robotImg = loadImage("img/robot.png");
   cabbageImg = loadImage("img/cabbage.png");
+  groundhogImg = loadImage("img/groundhog.png");
   groundhogDownImg = loadImage("img/groundhogDown.png");
   groundhogLeftImg = loadImage("img/groundhogLeft.png");
   groundhogRightImg = loadImage("img/groundhogRight.png");
@@ -70,9 +80,11 @@ void setup() {
   laserSpeed=2;
 
   //groundhog
-  groundhogX=320;
-  groundhogY=80;
+  groundhogX=320.0;
+  groundhogY=80.0;
   groundhogSize=80;
+  t=0.0;//groundhog change position
+  hogState = HOG_IDLE;
 
   //cabbage
   cabbageX = 80*floor(random(0, 8));
@@ -84,6 +96,11 @@ void draw() {
   switch(gameState) {
   case GAME_START:
     image(titleImg, 0, 0);//start picture
+    hogState=HOG_IDLE;
+    t=0.0;
+    downPressed=false;
+    leftPressed=false;
+    rightPressed=false;
     //detect button position
     if (mouseX > BUTTON_LEFT && mouseX < BUTTON_RIGHT
       && mouseY > BUTTON_TOP && mouseY < BUTTON_BOTTOM) {
@@ -125,31 +142,97 @@ void draw() {
       image(lifeImg, 150, 10);
     }
 
+
+    //check area
+    strokeWeight(1);
+    stroke(0, 255, 0);
+    line(80, 160, 80, width);
+    line(160, 160, 160, width);
+    line(240, 160, 240, width);
+    line(320, 160, 320, width);
+    line(400, 160, 400, width);
+    line(480, 160, 480, height);
+    line(560, 160, 560, height);
+    line(640, 160, 640, height);
+
+    line(0, 160, 640, 160);
+    line(0, 240, 640, 240);
+    line(0, 320, 640, 320);
+    line(0, 400, 640, 400);
+
     //cabbage
-    if (groundhogX < cabbageX+cabbageSize &&
+    if (groundhogX < cabbageX+cabbageSize &&//hog touch cabbage
       groundhogX+groundhogSize > cabbageX &&
       groundhogY < cabbageY+cabbageSize &&
       groundhogY+groundhogSize > cabbageY)
     {
       lifeCount+=1;
+      groundhogX=cabbageX;
+      groundhogY=cabbageY;
       cabbageX=-80;//let cabbage out of the screen
       cabbageY=-80;
+      hogState=HOG_IDLE;
     }
     image(cabbageImg, cabbageX, cabbageY);
 
     //characters
 
     //Draw groundhog
-    if (groundhogX < soldierX+soldierSize &&
+    if (groundhogX < soldierX+soldierSize &&//hog touch soldier
       groundhogX+groundhogSize > soldierX &&
       groundhogY < soldierY+soldierSize &&
       groundhogY+groundhogSize > soldierY)
     {
       lifeCount-=1;
-      groundhogX=320;
-      groundhogY=80;
+      groundhogX=320.0;
+      groundhogY=80.0;
+      hogState=HOG_IDLE;
     }
-    image(groundhogImg, groundhogX, groundhogY);
+
+    //groundhog boundary detection
+    if (groundhogX > width-groundhogSize) {
+      groundhogX = width-groundhogSize;
+    }
+    if (groundhogX < 0) {
+      groundhogX = 0.0;
+    }
+    if (groundhogY > height-groundhogSize) {
+      groundhogY = height-groundhogSize;
+    }
+    if (groundhogY < 80) {
+      groundhogY = 80.0;
+    }
+
+    //hog move timer
+    if (t==15.0) {
+      hogState=HOG_IDLE;
+    }
+
+    switch(hogState) {//control hog's state
+
+    case HOG_IDLE:
+      image(groundhogImg, groundhogX, groundhogY);
+      t=0.0;
+      break;
+
+    case HOG_DOWN:
+      image(groundhogDownImg, groundhogX, groundhogY);
+      groundhogY += (80.0/15.0);
+      t++;
+      break;
+
+    case HOG_LEFT:
+      image(groundhogLeftImg, groundhogX, groundhogY);
+      groundhogX -= (80.0/15.0);
+      t++;
+      break;
+
+    case HOG_RIGHT:
+      image(groundhogRightImg, groundhogX, groundhogY);
+      groundhogX += (80.0/15.0);
+      t++;
+      break;
+    }
 
     //Draw soldier
     image(soldierImg, soldierX, soldierY);
@@ -179,6 +262,9 @@ void draw() {
 
   case GAME_OVER:
     image(gameoverImg, 0, 0);//gameover picture
+    downPressed=false;
+    leftPressed=false;
+    rightPressed=false;
     //detect button position
     if (mouseX > BUTTON_LEFT && mouseX < BUTTON_RIGHT
       && mouseY > BUTTON_TOP && mouseY < BUTTON_BOTTOM) {
@@ -186,8 +272,12 @@ void draw() {
       if (mousePressed) {
         gameState = GAME_RUN;
         lifeCount = 2;
-        groundhogX=320;
-        groundhogY=80;
+
+        groundhogX=320.0;
+        groundhogY=80.0;
+        hogState=HOG_IDLE;
+        t=0.0;
+
         soldierY = 80*floor(random(2, 6));
         cabbageX = 80*floor(random(0, 8));
         cabbageY = 80*floor(random(2, 6));
@@ -200,34 +290,29 @@ void draw() {
 }
 
 void keyPressed() {
-  switch (keyCode) {
-  case DOWN: //CODE 40
-    groundhogY += 80;
-    image(groundhogDownImg, groundhogX, groundhogY);
-    break;
-  case LEFT: //CODE 37
-    groundhogX -= 80;
-    image(groundhogLeftImg, groundhogX, groundhogY);
-    break;
-  case RIGHT: //CODE 39
-    groundhogX += 80;
-    image(groundhogRightImg, groundhogX, groundhogY);
-    break;
+  if (key==CODED) {
+    switch (keyCode) {
+    case DOWN:
+      downPressed=true;
+      leftPressed=false;
+      rightPressed=false;
+      hogState = HOG_DOWN;
+      t=0.0;
+      break;
+    case LEFT:
+      leftPressed=true;
+      downPressed=false;
+      rightPressed=false;
+      hogState = HOG_LEFT;
+      t=0.0;
+      break;
+    case RIGHT:
+      rightPressed=true;
+      downPressed=false;
+      leftPressed=false;
+      hogState = HOG_RIGHT;
+      t=0.0;
+      break;
+    }
   }
-  //groundhog boundary detection
-  if (groundhogX > width-groundhogSize) {
-    groundhogX = width-groundhogSize;
-  }
-  if (groundhogX < 0) {
-    groundhogX = 0;
-  }
-  if (groundhogY > height-groundhogSize) {
-    groundhogY = height-groundhogSize;
-  }
-  if (groundhogY < 80) {
-    groundhogY = 80;
-  }
-}
-
-void keyReleased() {
 }
