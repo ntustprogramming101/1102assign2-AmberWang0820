@@ -23,6 +23,7 @@ int laserSpeed;
 float groundhogX;//groundhog's position
 float groundhogY;
 int groundhogSize;
+final int soilSize = 80;//to remove the offset
 int cabbageX;//cabbage's position
 int cabbageY;
 int cabbageSize;
@@ -86,6 +87,8 @@ void setup() {
   t=0.0;//groundhog change position
   hogState = HOG_IDLE;
 
+  //soil
+
   //cabbage
   cabbageX = 80*floor(random(0, 8));
   cabbageY = 80*floor(random(2, 6));
@@ -142,39 +145,25 @@ void draw() {
       image(lifeImg, 150, 10);
     }
 
-
-    //check area
-    strokeWeight(1);
-    stroke(0, 255, 0);
-    line(80, 160, 80, width);
-    line(160, 160, 160, width);
-    line(240, 160, 240, width);
-    line(320, 160, 320, width);
-    line(400, 160, 400, width);
-    line(480, 160, 480, height);
-    line(560, 160, 560, height);
-    line(640, 160, 640, height);
-
-    line(0, 160, 640, 160);
-    line(0, 240, 640, 240);
-    line(0, 320, 640, 320);
-    line(0, 400, 640, 400);
-
-    //cabbage
-    if (groundhogX < cabbageX+cabbageSize &&//hog touch cabbage
-      groundhogX+groundhogSize > cabbageX &&
-      groundhogY < cabbageY+cabbageSize &&
-      groundhogY+groundhogSize > cabbageY)
-    {
-      lifeCount+=1;
-      cabbageX=-80;//let cabbage out of the screen
-      cabbageY=-80;
-    }
-    image(cabbageImg, cabbageX, cabbageY);
-
     //characters
 
     //Draw groundhog
+
+    //hog move timer
+    if (t==15.0) {
+      hogState=HOG_IDLE;
+      if (groundhogX%soilSize < 10) {//remove the offset
+        groundhogX=groundhogX-groundhogX%soilSize;
+      }else{
+        groundhogX=groundhogX-groundhogX%soilSize+soilSize;//remove the float one, add the right number
+      }
+      if (groundhogY%soilSize < 10) {//remove the offset
+        groundhogY=groundhogY-groundhogY%soilSize;
+      }else{
+        groundhogY=groundhogY-groundhogY%soilSize+soilSize;
+      }
+    }
+
     if (groundhogX < soldierX+soldierSize &&//hog touch soldier
       groundhogX+groundhogSize > soldierX &&
       groundhogY < soldierY+soldierSize &&
@@ -198,11 +187,6 @@ void draw() {
     }
     if (groundhogY < 80) {
       groundhogY = 80.0;
-    }
-
-    //hog move timer
-    if (t==15.0) {
-      hogState=HOG_IDLE;
     }
 
     switch(hogState) {//control hog's state
@@ -230,6 +214,18 @@ void draw() {
       t++;
       break;
     }
+
+    //cabbage
+    if (groundhogX < cabbageX+cabbageSize &&//hog touch cabbage
+      groundhogX+groundhogSize > cabbageX &&
+      groundhogY < cabbageY+cabbageSize &&
+      groundhogY+groundhogSize > cabbageY)
+    {
+      lifeCount+=1;
+      cabbageX=-80;//let cabbage out of the screen
+      cabbageY=-80;
+    }
+    image(cabbageImg, cabbageX, cabbageY);
 
     //Draw soldier
     image(soldierImg, soldierX, soldierY);
@@ -290,19 +286,25 @@ void keyPressed() {
   if (key==CODED) {
     switch (keyCode) {
     case DOWN:
-      downPressed=true;
-      hogState = HOG_DOWN;
-      t=0.0;
+      if (hogState == HOG_IDLE) {
+        downPressed=true;
+        hogState = HOG_DOWN;
+        t=0.0;
+      }
       break;
     case LEFT:
-      leftPressed=true;
-      hogState = HOG_LEFT;
-      t=0.0;
+      if (hogState == HOG_IDLE) {
+        leftPressed=true;
+        hogState = HOG_LEFT;
+        t=0.0;
+      }
       break;
     case RIGHT:
-      rightPressed=true;
-      hogState = HOG_RIGHT;
-      t=0.0;
+      if (hogState == HOG_IDLE) {
+        rightPressed=true;
+        hogState = HOG_RIGHT;
+        t=0.0;
+      }
       break;
     }
   }
