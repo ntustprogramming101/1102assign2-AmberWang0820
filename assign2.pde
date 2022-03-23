@@ -142,6 +142,24 @@ void draw() {
       image(lifeImg, 150, 10);
     }
 
+
+    //check area
+    strokeWeight(1);
+    stroke(0, 255, 0);
+    line(80, 160, 80, width);
+    line(160, 160, 160, width);
+    line(240, 160, 240, width);
+    line(320, 160, 320, width);
+    line(400, 160, 400, width);
+    line(480, 160, 480, height);
+    line(560, 160, 560, height);
+    line(640, 160, 640, height);
+
+    line(0, 160, 640, 160);
+    line(0, 240, 640, 240);
+    line(0, 320, 640, 320);
+    line(0, 400, 640, 400);
+
     //cabbage
     if (groundhogX < cabbageX+cabbageSize &&//hog touch cabbage
       groundhogX+groundhogSize > cabbageX &&
@@ -149,11 +167,8 @@ void draw() {
       groundhogY+groundhogSize > cabbageY)
     {
       lifeCount+=1;
-      groundhogX=cabbageX;
-      groundhogY=cabbageY;
       cabbageX=-80;//let cabbage out of the screen
       cabbageY=-80;
-      hogState=HOG_IDLE;
     }
     image(cabbageImg, cabbageX, cabbageY);
 
@@ -276,22 +291,16 @@ void keyPressed() {
     switch (keyCode) {
     case DOWN:
       downPressed=true;
-      leftPressed=false;
-      rightPressed=false;
       hogState = HOG_DOWN;
       t=0.0;
       break;
     case LEFT:
       leftPressed=true;
-      downPressed=false;
-      rightPressed=false;
       hogState = HOG_LEFT;
       t=0.0;
       break;
     case RIGHT:
       rightPressed=true;
-      downPressed=false;
-      leftPressed=false;
       hogState = HOG_RIGHT;
       t=0.0;
       break;
